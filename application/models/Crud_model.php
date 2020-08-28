@@ -22,13 +22,20 @@ class Crud_model extends CI_Model {
             $this->db->delete('crud', array('id' => $id));
     }
     
-    public function update_entry()
-    {
-            $this->title    = $_POST['title'];
-            $this->content  = $_POST['content'];
-            $this->date     = time();
+    public function single_entry($id){
+        $this->db->select('*');
+        $this->db->from('crud');
+        $this->db->where('id', $id);
+        $query = $this->db->get();
 
-            $this->db->update('entries', $this, array('id' => $_POST['id']));
+        if(count($query->result())>0){
+            return $query->row();
+        }
+    }
+
+    public function update_entry($data)
+    {
+          return  $this->db->update('crud', $data, array('id' => $data['id']));
     }
 
 }

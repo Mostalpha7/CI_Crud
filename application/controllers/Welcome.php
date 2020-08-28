@@ -66,5 +66,50 @@ class Welcome extends CI_Controller {
 			echo json_encode($data);
 		}
 	}
+
+	public function edit(){
+		if($this->input->is_ajax_request()){
+			$edit_id = $this->input->post('edit_id');
+
+			if($post = $this->crud_model->single_entry($edit_id)){
+				$data = array('responce'=>'success', 'post'=> $post);	
+			}else{
+				$data = array('responce'=>'error', 'message'=> 'Failed');
+			}
+		}
+		echo json_encode($data);
+	}
+
+	public function update(){
+
+		if ($this->input->is_ajax_request()) {
+			  
+			$this->form_validation->set_rules('edit_name', 'Name', 'required');
+			$this->form_validation->set_rules('edit_email', 'Email', 'required|valid_email');
+
+
+			if ($this->form_validation->run() == FALSE)
+			{
+					$data = array('responce' => 'error','message'=> validation_errors());
+			}
+			else
+			{
+				$data['id'] = $this->input->post('edit_id');
+				$data['name'] = $this->input->post('edit_name');
+				$data['email'] = $this->input->post('edit_email');
+
+				
+				if($this->crud_model->update_entry($data) ){
+					$data = array('responce' => 'success','message'=> 'Data Updated successfully');
+				}else{
+					$data = array('responce' => 'error','message'=> 'Failed to add data');
+				}
+			}
+
+			echo json_encode($data);
+		}
+	}
+
 }
 
+?>

@@ -9,6 +9,8 @@
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
 	
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+ 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 
     <title>Hello, world!</title>
   </head>
@@ -25,7 +27,7 @@
 					Add Record
 				</button>
 
-				<!-- Modal -->
+				<!--Create Modal -->
 				<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
 					<div class="modal-dialog">
 						<div class="modal-content">
@@ -51,6 +53,39 @@
 							<div class="modal-footer">
 								<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 								<button type="button" class="btn btn-primary" id="add">Add</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Edit Modal -->
+				<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">Edit Modal</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							</div>
+							<div class="modal-body">
+								<form action="" method="post" id="form">
+									<input type="hidden" id="edit_modal_id" value="">
+
+									<div class="form-group">
+										<label for="">Name</label>
+										<input type="text" id="edit_name" class="form-control">
+									</div>
+									<div class="form-group">
+										<label for="">Email</label>
+										<input type="email" id="edit_email" class="form-control">
+									</div>
+
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+								<button type="button" class="btn btn-primary" id="update">Update</button>
 							</div>
 						</div>
 					</div>
@@ -86,6 +121,32 @@
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 
 	<script>
+		function fetch(){
+			$.ajax({
+				url: "<?php echo base_url() ?>fetch",
+				type: 'post',
+				dataType: 'json',
+				success: function(data){
+					var tbody = ""
+
+					for( var key in data){
+						tbody += "<tr>";
+						tbody += "<td>"+ data[key].id + "</td>";
+						tbody += "<td>"+ data[key].name + "</td>";
+						tbody += "<td>"+ data[key].email + "</td>";
+						tbody += `<td>
+									<a href="#" id="del" class="btn btn-outline-danger btn-sm" value="${data[key]['id']}"><i class="fa fa-remove"></i></a>
+									<a href="#" id="edit" class="btn btn-outline-success btn-sm"  value="${data[key]['id']}"><i class="fa fa-edit"></i></a>
+						 		   </td>`;
+						tbody += "</tr>";
+					}
+
+					$('#tbody').html(tbody)
+				}
+			})
+		}
+		fetch()
+
 		$(document).on('click', '#add', function(e){
 			e.preventDefault();
 			var name = $("#name").val();
@@ -99,6 +160,8 @@
 					email: email
 				},
 				success: function(data){
+					fetch();
+
 					$('#exampleModal').modal('hide')
 					
 					if(data.responce == "success"){
@@ -133,32 +196,7 @@
 			$('#form')[0].reset();
 		})
 
-		function fetch(){
-			$.ajax({
-				url: "<?php echo base_url() ?>fetch",
-				type: 'post',
-				dataType: 'json',
-				success: function(data){
-					var tbody = ""
-
-					for( var key in data){
-						tbody += "<tr>";
-						tbody += "<td>"+ data[key].id + "</td>";
-						tbody += "<td>"+ data[key].name + "</td>";
-						tbody += "<td>"+ data[key].email + "</td>";
-						tbody += `<td>
-									<a href="#" id="del" class="text-danger border p-2" value="${data[key]['id']}">Delete</a>
-									<a href="#" id="edit" class="text-warning border p-2" value="${data[key]['id']}">Edit</a>
-						 		   </td>`;
-						tbody += "</tr>";
-					}
-
-					$('#tbody').html(tbody)
-				}
-			})
-		}
-		fetch()
-
+		
 		$(document).on("click", "#del", function(e){
 			e.preventDefault();
 
@@ -212,6 +250,129 @@
 					)
 				}
 			})
+		})
+
+		$(document).on("click", "#edit", function(e){
+			e.preventDefault()
+
+			var edit_id = $(this).attr('value');
+			
+			if(edit_id=="" || edit_id== null){
+				alert('Edit_id is Required')
+			}else{
+				$.ajax({
+					url: "<?php echo base_url() ?>edit",
+					type: 'post',
+					dataType:'json',
+					data:{
+						edit_id,edit_id
+					},
+					success: function(data){
+						if(data.responce=='success'){
+
+							$('#editModal').modal('show');
+							$('#edit_modal_id').val(data.post.id);
+							$('#edit_name').val(data.post.name);
+							$('#edit_email').val(data.post.email);
+
+						}else{
+
+							toastr[toastr_type](data.message)
+
+							toastr.options = {
+							"closeButton": true,
+							"debug": false,
+							"newestOnTop": false,
+							"progressBar": true,
+							"positionClass": "toast-top-right",
+							"preventDuplicates": false,
+							"onclick": null,
+							"showDuration": "300",
+							"hideDuration": "1000",
+							"timeOut": "5000",
+							"extendedTimeOut": "1000",
+							"showEasing": "swing",
+							"hideEasing": "linear",
+							"showMethod": "fadeIn",
+							"hideMethod": "fadeOut" 
+							}
+
+						}
+
+					}
+				})
+			}
+		})
+
+		$(document).on("click", '#update', function(e){
+			e.preventDefault()
+
+			var edit_id = $('#edit_modal_id').val();
+			var edit_name = $('#edit_name').val();
+			var edit_email = $('#edit_email').val();
+
+
+			if(edit_id==""|| edit_id==null || edit_name==""|| edit_email==""){
+				alert('both fields cannot be empty');
+			}else{				
+				$.ajax({
+					url: '<?php echo base_url(); ?>update',
+					type: 'post',
+					dataType:'json',
+					data: {
+						edit_id: edit_id,
+						edit_name: edit_name,
+						edit_email: edit_email
+					},
+					success: function(data){
+						fetch();
+			
+						$('#editModal').modal('hide');
+						if(data.responce == "success"){
+
+							toastr["success"](data.message)
+
+							toastr.options = {
+							"closeButton": true,
+							"debug": false,
+							"newestOnTop": false,
+							"progressBar": true,
+							"positionClass": "toast-top-right",
+							"preventDuplicates": false,
+							"onclick": null,
+							"showDuration": "300",
+							"hideDuration": "1000",
+							"timeOut": "5000",
+							"extendedTimeOut": "1000",
+							"showEasing": "swing",
+							"hideEasing": "linear",
+							"showMethod": "fadeIn",
+							"hideMethod": "fadeOut" 
+							}
+						}else{
+							toastr["error"](data.message)
+
+							toastr.options = {
+							"closeButton": true,
+							"debug": false,
+							"newestOnTop": false,
+							"progressBar": true,
+							"positionClass": "toast-top-right",
+							"preventDuplicates": false,
+							"onclick": null,
+							"showDuration": "300",
+							"hideDuration": "1000",
+							"timeOut": "5000",
+							"extendedTimeOut": "1000",
+							"showEasing": "swing",
+							"hideEasing": "linear",
+							"showMethod": "fadeIn",
+							"hideMethod": "fadeOut" 
+							}
+						}
+					}
+				}) 
+			}
 		})
 	</script>
   </body>
